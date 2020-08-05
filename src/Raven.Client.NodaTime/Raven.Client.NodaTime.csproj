@@ -25,7 +25,7 @@
   <ItemGroup>
     <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="$(PackageLicenseFile)" />
     <None Include="..\..\logo-for-nuget.png" Pack="true" PackagePath="\"/>
-    <PackageReference Include="NodaTime" Version="2.4.5" />
+    <PackageReference Include="NodaTime" Version="3.0.0" />
     <PackageReference Include="RavenDB.Client" Version="5.0.0" />
   </ItemGroup>
 </Project>
