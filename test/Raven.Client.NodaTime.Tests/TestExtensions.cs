@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Newtonsoft.Json;
+using NodaTime;
 using Raven.Client.Documents;
 using Raven.Client.Json.Serialization;
 
@@ -27,6 +28,18 @@ namespace Raven.Client.NodaTime.Tests
             }
 
             Debug.WriteLine(sb);
+        }
+
+        public static YearMonth Plus(this YearMonth ym, Period period)
+        {
+            var startDay = ym.ToDateInterval().Start;
+            return (startDay + period).ToYearMonth();
+        }
+
+        public static YearMonth Minus(this YearMonth ym, Period period)
+        {
+            var startDay = ym.ToDateInterval().Start;
+            return (startDay - period).ToYearMonth();
         }
     }
 }

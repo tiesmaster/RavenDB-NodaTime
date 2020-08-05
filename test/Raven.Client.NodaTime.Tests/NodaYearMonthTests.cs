@@ -13,7 +13,7 @@ namespace Raven.Client.NodaTime.Tests
         [Fact]
         public void Can_Use_NodaTime_YearMonth_In_Document_Today()
         {
-            Can_Use_NodaTime_YearMonth_In_Document(NodaUtil.YearMonth.Today);
+            Can_Use_NodaTime_YearMonth_In_Document(NodaUtil.YearMonth.ThisMonth);
         }
 
         [Fact]
@@ -28,13 +28,13 @@ namespace Raven.Client.NodaTime.Tests
             Can_Use_NodaTime_YearMonth_In_Document(NodaUtil.YearMonth.MaxIsoValue);
         }
 
-        private void Can_Use_NodaTime_YearMonth_In_Document(YearMonth ld)
+        private void Can_Use_NodaTime_YearMonth_In_Document(YearMonth ym)
         {
             using (var documentStore = NewDocumentStore())
             {
                 using (var session = documentStore.OpenSession())
                 {
-                    session.Store(new Foo { Id = "foos/1", YearMonth = ld });
+                    session.Store(new Foo { Id = "foos/1", YearMonth = ym });
                     session.SaveChanges();
                 }
 
@@ -42,7 +42,7 @@ namespace Raven.Client.NodaTime.Tests
                 {
                     var foo = session.Load<Foo>("foos/1");
 
-                    Assert.Equal(ld, foo.YearMonth);
+                    Assert.Equal(ym, foo.YearMonth);
                 }
 
                 using (var session = documentStore.OpenSession())
@@ -51,7 +51,7 @@ namespace Raven.Client.NodaTime.Tests
                     session.Advanced.RequestExecutor.Execute(command, session.Advanced.Context);
                     var json = (BlittableJsonReaderObject)command.Result.Results[0];
                     System.Diagnostics.Debug.WriteLine(json.ToString());
-                    var expected = ld.ToString(YearMonthPattern.Iso.PatternText, null);
+                    var expected = ym.ToString(YearMonthPattern.Iso.PatternText, null);
                     json.TryGet("YearMonth", out string value);
                     Assert.Equal(expected, value);
                 }
@@ -61,7 +61,7 @@ namespace Raven.Client.NodaTime.Tests
         [Fact]
         public void Can_Use_NodaTime_YearMonth_In_Dynamic_Index_Today()
         {
-            Can_Use_NodaTime_YearMonth_In_Dynamic_Index1(NodaUtil.YearMonth.Today);
+            Can_Use_NodaTime_YearMonth_In_Dynamic_Index1(NodaUtil.YearMonth.ThisMonth);
         }
 
         [Fact]
@@ -76,34 +76,34 @@ namespace Raven.Client.NodaTime.Tests
             Can_Use_NodaTime_YearMonth_In_Dynamic_Index2(NodaUtil.YearMonth.MaxIsoValue);
         }
 
-        private void Can_Use_NodaTime_YearMonth_In_Dynamic_Index1(YearMonth ld)
+        private void Can_Use_NodaTime_YearMonth_In_Dynamic_Index1(YearMonth ym)
         {
             using (var documentStore = NewDocumentStore())
             {
                 using (var session = documentStore.OpenSession())
                 {
-                    session.Store(new Foo { Id = "foos/1", YearMonth = ld });
-                    session.Store(new Foo { Id = "foos/2", YearMonth = ld + Period.FromDays(1) });
-                    session.Store(new Foo { Id = "foos/3", YearMonth = ld + Period.FromDays(2) });
+                    session.Store(new Foo { Id = "foos/1", YearMonth = ym });
+                    session.Store(new Foo { Id = "foos/2", YearMonth = ym.Plus(Period.FromMonths(1)) });
+                    session.Store(new Foo { Id = "foos/3", YearMonth = ym.Plus(Period.FromMonths(2)) });
                     session.SaveChanges();
                 }
 
                 using (var session = documentStore.OpenSession())
                 {
                     var q1 = session.Query<Foo>().Customize(x => x.WaitForNonStaleResults())
-                                    .Where(x => x.YearMonth == ld);
+                                    .Where(x => x.YearMonth == ym);
                     var results1 = q1.ToList();
                     Assert.Single(results1);
 
                     var q2 = session.Query<Foo>().Customize(x => x.WaitForNonStaleResults())
-                                    .Where(x => x.YearMonth > ld)
+                                    .Where(x => x.YearMonth > ym)
                                     .OrderByDescending(x => x.YearMonth);
                     var results2 = q2.ToList();
                     Assert.Equal(2, results2.Count);
                     Assert.True(results2[0].YearMonth > results2[1].YearMonth);
 
                     var q3 = session.Query<Foo>().Customize(x => x.WaitForNonStaleResults())
-                                    .Where(x => x.YearMonth >= ld)
+                                    .Where(x => x.YearMonth >= ym)
                                     .OrderByDescending(x => x.YearMonth);
                     var results3 = q3.ToList();
                     Assert.Equal(3, results3.Count);
@@ -113,34 +113,34 @@ namespace Raven.Client.NodaTime.Tests
             }
         }
 
-        private void Can_Use_NodaTime_YearMonth_In_Dynamic_Index2(YearMonth ld)
+        private void Can_Use_NodaTime_YearMonth_In_Dynamic_Index2(YearMonth ym)
         {
             using (var documentStore = NewDocumentStore())
             {
                 using (var session = documentStore.OpenSession())
                 {
-                    session.Store(new Foo { Id = "foos/1", YearMonth = ld });
-                    session.Store(new Foo { Id = "foos/2", YearMonth = ld - Period.FromDays(1) });
-                    session.Store(new Foo { Id = "foos/3", YearMonth = ld - Period.FromDays(2) });
+                    session.Store(new Foo { Id = "foos/1", YearMonth = ym });
+                    session.Store(new Foo { Id = "foos/2", YearMonth = ym.Minus(Period.FromMonths(1)) });
+                    session.Store(new Foo { Id = "foos/3", YearMonth = ym.Minus(Period.FromMonths(2)) });
                     session.SaveChanges();
                 }
 
                 using (var session = documentStore.OpenSession())
                 {
                     var q1 = session.Query<Foo>().Customize(x => x.WaitForNonStaleResults())
-                                    .Where(x => x.YearMonth == ld);
+                                    .Where(x => x.YearMonth == ym);
                     var results1 = q1.ToList();
                     Assert.Single(results1);
 
                     var q2 = session.Query<Foo>().Customize(x => x.WaitForNonStaleResults())
-                                    .Where(x => x.YearMonth < ld)
+                                    .Where(x => x.YearMonth < ym)
                                     .OrderBy(x => x.YearMonth);
                     var results2 = q2.ToList();
                     Assert.Equal(2, results2.Count);
                     Assert.True(results2[0].YearMonth < results2[1].YearMonth);
 
                     var q3 = session.Query<Foo>().Customize(x => x.WaitForNonStaleResults())
-                                    .Where(x => x.YearMonth <= ld)
+                                    .Where(x => x.YearMonth <= ym)
                                     .OrderBy(x => x.YearMonth);
                     var results3 = q3.ToList();
                     Assert.Equal(3, results3.Count);
@@ -153,7 +153,7 @@ namespace Raven.Client.NodaTime.Tests
         [Fact]
         public void Can_Use_NodaTime_YearMonth_In_Static_Index_Today()
         {
-            Can_Use_NodaTime_YearMonth_In_Static_Index1(NodaUtil.YearMonth.Today);
+            Can_Use_NodaTime_YearMonth_In_Static_Index1(NodaUtil.YearMonth.ThisMonth);
         }
 
         [Fact]
@@ -168,7 +168,7 @@ namespace Raven.Client.NodaTime.Tests
             Can_Use_NodaTime_YearMonth_In_Static_Index2(NodaUtil.YearMonth.MaxIsoValue);
         }
 
-        private void Can_Use_NodaTime_YearMonth_In_Static_Index1(YearMonth ld)
+        private void Can_Use_NodaTime_YearMonth_In_Static_Index1(YearMonth ym)
         {
             using (var documentStore = NewDocumentStore())
             {
@@ -176,28 +176,28 @@ namespace Raven.Client.NodaTime.Tests
 
                 using (var session = documentStore.OpenSession())
                 {
-                    session.Store(new Foo { Id = "foos/1", YearMonth = ld });
-                    session.Store(new Foo { Id = "foos/2", YearMonth = ld + Period.FromDays(1) });
-                    session.Store(new Foo { Id = "foos/3", YearMonth = ld + Period.FromDays(2) });
+                    session.Store(new Foo { Id = "foos/1", YearMonth = ym });
+                    session.Store(new Foo { Id = "foos/2", YearMonth = ym.Plus(Period.FromMonths(1)) });
+                    session.Store(new Foo { Id = "foos/3", YearMonth = ym.Plus(Period.FromMonths(2)) });
                     session.SaveChanges();
                 }
 
                 using (var session = documentStore.OpenSession())
                 {
                     var q1 = session.Query<Foo, TestIndex>().Customize(x => x.WaitForNonStaleResults())
-                                    .Where(x => x.YearMonth == ld);
+                                    .Where(x => x.YearMonth == ym);
                     var results1 = q1.ToList();
                     Assert.Single(results1);
 
                     var q2 = session.Query<Foo, TestIndex>().Customize(x => x.WaitForNonStaleResults())
-                                    .Where(x => x.YearMonth > ld)
+                                    .Where(x => x.YearMonth > ym)
                                     .OrderByDescending(x => x.YearMonth);
                     var results2 = q2.ToList();
                     Assert.Equal(2, results2.Count);
                     Assert.True(results2[0].YearMonth > results2[1].YearMonth);
 
                     var q3 = session.Query<Foo, TestIndex>().Customize(x => x.WaitForNonStaleResults())
-                                    .Where(x => x.YearMonth >= ld)
+                                    .Where(x => x.YearMonth >= ym)
                                     .OrderByDescending(x => x.YearMonth);
                     var results3 = q3.ToList();
                     Assert.Equal(3, results3.Count);
@@ -207,7 +207,7 @@ namespace Raven.Client.NodaTime.Tests
             }
         }
 
-        private void Can_Use_NodaTime_YearMonth_In_Static_Index2(YearMonth ld)
+        private void Can_Use_NodaTime_YearMonth_In_Static_Index2(YearMonth ym)
         {
             using (var documentStore = NewDocumentStore())
             {
@@ -215,28 +215,28 @@ namespace Raven.Client.NodaTime.Tests
 
                 using (var session = documentStore.OpenSession())
                 {
-                    session.Store(new Foo { Id = "foos/1", YearMonth = ld });
-                    session.Store(new Foo { Id = "foos/2", YearMonth = ld - Period.FromDays(1) });
-                    session.Store(new Foo { Id = "foos/3", YearMonth = ld - Period.FromDays(2) });
+                    session.Store(new Foo { Id = "foos/1", YearMonth = ym });
+                    session.Store(new Foo { Id = "foos/2", YearMonth = ym.Minus(Period.FromMonths(1)) });
+                    session.Store(new Foo { Id = "foos/3", YearMonth = ym.Minus(Period.FromMonths(2)) });
                     session.SaveChanges();
                 }
 
                 using (var session = documentStore.OpenSession())
                 {
                     var q1 = session.Query<Foo, TestIndex>().Customize(x => x.WaitForNonStaleResults())
-                                    .Where(x => x.YearMonth == ld);
+                                    .Where(x => x.YearMonth == ym);
                     var results1 = q1.ToList();
                     Assert.Single(results1);
 
                     var q2 = session.Query<Foo, TestIndex>().Customize(x => x.WaitForNonStaleResults())
-                                    .Where(x => x.YearMonth < ld)
+                                    .Where(x => x.YearMonth < ym)
                                     .OrderBy(x => x.YearMonth);
                     var results2 = q2.ToList();
                     Assert.Equal(2, results2.Count);
                     Assert.True(results2[0].YearMonth < results2[1].YearMonth);
 
                     var q3 = session.Query<Foo, TestIndex>().Customize(x => x.WaitForNonStaleResults())
-                                    .Where(x => x.YearMonth <= ld)
+                                    .Where(x => x.YearMonth <= ym)
                                     .OrderBy(x => x.YearMonth);
                     var results3 = q3.ToList();
                     Assert.Equal(3, results3.Count);

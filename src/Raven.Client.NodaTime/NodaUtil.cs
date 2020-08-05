@@ -25,15 +25,21 @@ namespace Raven.Client.NodaTime
             internal static void Validate(global::NodaTime.Instant instant)
             {
                 if (instant.ToUnixTimeTicks() >= MinIsoTicks && instant.ToUnixTimeTicks() <= MaxIsoTicks)
+                {
                     return;
+                }
 
                 var message = "NodaTime Instant values must fall between UTC years 0001 and 9999 to be compatible with RavenDB.";
 
                 if (instant == global::NodaTime.Instant.MinValue)
+                {
                     message += " If you are attempting to use Instant.MinValue, use NodaUtil.Instant.MinIsoValue instead.";
+                }
 
                 if (instant == global::NodaTime.Instant.MaxValue)
+                {
                     message += " If you are attempting to use Instant.MaxValue, use NodaUtil.Instant.MaxIsoValue instead.";
+                }
 
                 throw new ArgumentOutOfRangeException("instant", instant, message);
             }
@@ -124,6 +130,28 @@ namespace Raven.Client.NodaTime
             public static global::NodaTime.LocalTime UtcNow
             {
                 get { return global::NodaTime.LocalDateTime.FromDateTime(DateTime.UtcNow).TimeOfDay; }
+            }
+        }
+
+        public static class YearMonth
+        {
+            public static global::NodaTime.YearMonth MinIsoValue
+            {
+                get { return new global::NodaTime.YearMonth(1, 1); }
+            }
+
+            public static global::NodaTime.YearMonth MaxIsoValue
+            {
+                get { return new global::NodaTime.YearMonth(9999, 12); }
+            }
+
+            public static global::NodaTime.YearMonth ThisMonth
+            {
+                get
+                {
+                    var today = DateTime.Today;
+                    return new global::NodaTime.YearMonth(today.Year, today.Month);
+                }
             }
         }
 
